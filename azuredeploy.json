@@ -142,6 +142,14 @@
         "description": "Number of Elasticsearch data nodes"
       }
     },
+    "dataNodesConfiguration": {
+      "type": "string",
+      "defaultValue": "singlebox",
+      "allowedValues": [
+        "singlebox",
+        "data"
+      ]
+    },
     "esClusterName": {
       "type": "string",
       "defaultValue": "elasticsearch",
@@ -256,6 +264,15 @@
           "settings": {
             "fileUris": "[variables('ubuntuScripts')]",
             "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -zn ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').discoveryHosts)]"
+          }
+        },
+        "singlebox": {
+          "publisher": "Microsoft.OSTCExtensions",
+          "type": "CustomScriptForLinux",
+          "typeHandlerVersion": "1.2",
+          "settings": {
+            "fileUris": "[variables('ubuntuScripts')]",
+            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -n ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').discoveryHosts)]"
           }
         }
       }
@@ -564,6 +581,9 @@
           },
           "lbBackendPools": {
             "value": "[variables('dataLBSettings')]"
+          },
+          "extensionSettingsPath": {
+            "value": "[parameters('dataNodesConfiguration')]"
           }
         }
       }

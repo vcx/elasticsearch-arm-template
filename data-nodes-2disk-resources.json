@@ -87,8 +87,7 @@
     "vmStorageAccountContainerName": "vhd",
     "subnetRef": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('subnet').vnet), '/subnets/', parameters('subnet').name)]",
     "storageAccountName": "[concat(parameters('storageSettings').prefix, 'd')]",
-    "vmName": "[concat(parameters('namespace'), 'vm')]",
-    "extension": "[concat(parameters('osSettings'), '.extentionSettings.', parameters('extensionSettingsPath'))]"
+    "vmName": "[concat(parameters('namespace'), 'vm')]"
   },
   "resources": [
     {
@@ -213,7 +212,7 @@
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', parameters('namespace'), 'vm', copyindex())]"
           ],
-          "properties": "[variables('extension')]"
+          "properties": "[parameters('osSettings')[extentionSettings][parameters('extensionSettingsPath')]]"
         }
       ]
     }

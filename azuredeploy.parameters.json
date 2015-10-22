@@ -3,10 +3,10 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "dnsNameforLBIP": {
-      "value": "eslbip12"
+      "value": "eslbip13"
     },
     "storageAccountPrefix": {
-      "value": "esstorage12"
+      "value": "esstorage13"
     },
     "adminUsername": {
       "value": "amoor"

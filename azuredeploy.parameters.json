@@ -9,22 +9,22 @@
       "value": "changeme"
     },
     "adminUsername": {
-      "value": "trent"
+      "value": "amoor"
     },
     "adminPassword": {
-      "value": "changeme"
+      "value": "WSXzaq123"
     },
     "vmDataNodeCount": {
       "value": 3
     },
     "location": {
-      "value": "West US"
+      "value": "East US"
     },
     "virtualNetworkName": {
       "value": "elasticsearch"
     },
     "esClusterName": {
-      "value": "elasticsearch-fullscale"
+      "value": "elasticsearch"
     },
     "loadBalancerType": {
       "value": "external"

@@ -70,6 +70,17 @@
       "metadata": {
         "description": "loadBalancerBackendAddressPools config object"
       }
+    },
+    "extensionSettingsPath": {
+      "type": "string",
+      "defaultValue": "singlebox",
+      "allowedValues": [
+        "singlebox",
+        "data"
+      ],
+      "metadata": {
+        "description": "The extension that should be used to install Elastisearch as singlebox (for development/test tasks) or production ready cluster"
+      }
     }
   },
   "variables": {
@@ -261,7 +272,7 @@
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', parameters('namespace'), 'vm', copyindex())]"
           ],
-          "properties": "[parameters('osSettings').extentionSettings.data]"
+          "properties": "[concat(parameters('osSettings'), '.extentionSettings.', parameters('extensionSettingsPath'))]"
         }
       ]
     }

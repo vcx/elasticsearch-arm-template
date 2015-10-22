@@ -8,7 +8,7 @@
     },
     "subnet": {
       "type": "object",
-      "defaultValue": {}
+      "defaultValue": { }
     },
     "storageAccountName": {
       "type": "string",
@@ -24,7 +24,7 @@
     },
     "osSettings": {
       "type": "object",
-      "defaultValue": {}
+      "defaultValue": { }
     },
     "vmSize": {
       "type": "string",
@@ -36,7 +36,11 @@
     },
     "lbBackendPools": {
       "type": "object",
-      "defaultValue": {}
+      "defaultValue": { }
+    },
+    "masterNodesIpPrefix": {
+      "type": "string",
+      "defaultValue": ""
     }
   },
   "variables": {},

@@ -72,7 +72,7 @@ fi
 CLUSTER_NAME="elasticsearch"
 ES_VERSION="1.7.2"
 DISCOVERY_ENDPOINTS=""
-INSTALL_MARVEL="no" #We use this because of ARM template limitation
+INSTALL_MARVEL="yes" #We use this because of ARM template limitation
 CLIENT_ONLY_NODE=0
 DATA_NODE=0
 MASTER_ONLY_NODE=0

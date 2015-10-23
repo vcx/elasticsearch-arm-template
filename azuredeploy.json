@@ -76,7 +76,7 @@
     },
     "jumpbox": {
       "type": "string",
-      "defaultValue": "No",
+      "defaultValue": "Yes",
       "allowedValues": [
         "Yes",
         "No"
@@ -181,6 +181,7 @@
   "variables": {
     "templateBaseUrl": "https://raw.githubusercontent.com/moorandrew/elasticsearch-arm-template/master/",
     "masterNodesIpPrefix": "10.0.0.1",
+    "dataNodesIpPrefix": "10.0.1.1",
     "networkSettings": {
       "virtualNetworkName": "[parameters('virtualNetworkName')]",
       "addressPrefix": "10.0.0.0/16",
@@ -200,7 +201,8 @@
     "esSettings": {
       "clusterName": "[parameters('esClusterName')]",
       "version": "[parameters('esVersion')]",
-      "discoveryHosts": "[concat(variables('masterNodesIpPrefix'), '-3')]"
+      "discoveryHosts": "[concat(variables('masterNodesIpPrefix'), '-3')]",
+      "dataDiscoveryHosts": "[concat(variables('dataNodesIpPrefix'), '-', parameters('vmDataNodeCount'))]"
     },
     "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
     "masterTemplates": {
@@ -279,7 +281,7 @@
           "typeHandlerVersion": "1.2",
           "settings": {
             "fileUris": "[variables('ubuntuScripts')]",
-            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -n ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').discoveryHosts)]"
+            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -n ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').dataDiscoveryHosts)]"
           }
         }
       }
@@ -574,6 +576,9 @@
           },
           "subnet": {
             "value": "[variables('networkSettings').subnet.data]"
+          },
+          "dataNodesIpPrefix": {
+            "value": "[variables('dataNodesIpPrefix')]"
           },
           "vmSize": {
             "value": "[parameters('vmSizeDataNodes')]"

@@ -283,6 +283,15 @@
             "fileUris": "[variables('ubuntuScripts')]",
             "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -n ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').dataDiscoveryHosts)]"
           }
+        },
+        "kibana": {
+          "publisher": "Microsoft.OSTCExtensions",
+          "type": "CustomScriptForLinux",
+          "typeHandlerVersion": "1.2",
+          "settings": {
+            "fileUris": "[variables('ubuntuScripts')]",
+            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -n ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').dataDiscoveryHosts)]"
+          }
         }
       }
     },

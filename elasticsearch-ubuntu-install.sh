@@ -4,7 +4,7 @@
 #
 # Copyright (c) 2015 Microsoft Azure
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
+# Permission is hereby granted, free of` charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -46,6 +46,8 @@ log()
     echo "$1"
 }
 
+
+
 log "Begin execution of Elasticsearch script extension on ${HOSTNAME}"
 
 if [ "${UID}" -ne 0 ];
@@ -71,14 +73,37 @@ fi
 #Script Parameters
 CLUSTER_NAME="elasticsearch"
 ES_VERSION="1.7.2"
+KIBANA_VERSION = "4.1"
 DISCOVERY_ENDPOINTS=""
 INSTALL_MARVEL="yes" #We use this because of ARM template limitation
 CLIENT_ONLY_NODE=0
 DATA_NODE=0
 MASTER_ONLY_NODE=0
+CLUSTER_ENDPOINT="localhost"
+
+install_kibana()
+{
+  log "Installing Kibana Version - $KIBANA_VERSION"
+
+  # Create the Kibana source list
+  echo 'deb http://packages.elastic.co/kibana/$KIBANA_VERSION/debian stable main' | sudo tee /etc/apt/sources.list.d/kibana.list
+
+  # Update apt package database
+  sudo apt-get update
+
+  # Install Kibana
+  sudo apt-get -y install kibana
+
+  # Change Kibana host configuration
+  sudo sed -i 's/0.0.0.0/$CLUSTER_ENDPOINT/g' /opt/kibana/config/kibana.yml
+
+  # Enable the Kibana service and start it
+  sudo update-rc.d kibana defaults 96 9
+  sudo service kibana start
+}
 
 #Loop through options passed
-while getopts :n:d:v:l:xyzsh optname; do
+while getopts :n:d:v:l:k:xyzsh optname; do
     log "Option $optname set with value ${OPTARG}"
   case $optname in
     n) #set cluster name
@@ -92,6 +117,11 @@ while getopts :n:d:v:l:xyzsh optname; do
       ;;
     l) #install marvel
       INSTALL_MARVEL=${OPTARG}
+      ;;
+    k) #install kibana
+      CLUSTER_ENDPOINT=${OPTARG}
+      install_kibana()
+      exit 0
       ;;
     x) #master node
       MASTER_ONLY_NODE=1

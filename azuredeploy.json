@@ -239,6 +239,7 @@
       "[concat(variables('templateBaseUrl'), 'elasticsearch-ubuntu-install.sh')]",
       "https://raw.githubusercontent.com/moorandrew/elasticsearch-arm-template/master/vm-disk-utils-0.1.sh"
     ],
+    "dnsNameforLBIPFull": "[concat(parameters('dnsNameforLBIP'), parameters('versionSuffix'))]",
     "ubuntuSettings": {
       "imageReference": {
         "publisher": "Canonical",
@@ -290,7 +291,7 @@
           "typeHandlerVersion": "1.2",
           "settings": {
             "fileUris": "[variables('ubuntuScripts')]",
-            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -n ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').dataDiscoveryHosts)]"
+            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -k ', variables('dnsNameforLBIPFull'))]"
           }
         }
       }

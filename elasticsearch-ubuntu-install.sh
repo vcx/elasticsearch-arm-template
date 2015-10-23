@@ -120,7 +120,7 @@ while getopts :n:d:v:l:k:xyzsh optname; do
       ;;
     k) #install kibana
       CLUSTER_ENDPOINT=${OPTARG}
-      install_kibana()
+      install_kibana
       exit 0
       ;;
     x) #master node

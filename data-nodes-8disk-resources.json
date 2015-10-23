@@ -272,7 +272,7 @@
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', parameters('namespace'), 'vm', copyindex())]"
           ],
-          "properties": "[concat(parameters('osSettings'), '.extentionSettings.', parameters('extensionSettingsPath'))]"
+          "properties": "[parameters('osSettings')['extentionSettings'][parameters('extensionSettingsPath')]]"
         }
       ]
     }

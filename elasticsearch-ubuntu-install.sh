@@ -89,7 +89,7 @@ install_kibana()
   sudo wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
 
   # Create the Kibana source list
-  echo "deb http://packages.elastic.co/kibana/$KIBANA_VERSION/debian stable main" | sudo tee /etc/apt/sources.list.d/kibana.list
+  echo "deb http://packages.elastic.co/kibana/4.1/debian stable main" | sudo tee /etc/apt/sources.list.d/kibana.list
 
   # Update apt package database
   sudo apt-get update

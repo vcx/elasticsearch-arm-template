@@ -85,21 +85,36 @@ install_kibana()
 {
   log "Installing Kibana Version - $KIBANA_VERSION"
 
-  # Create the Kibana source list
-  echo 'deb http://packages.elastic.co/kibana/$KIBANA_VERSION/debian stable main' | sudo tee /etc/apt/sources.list.d/kibana.list
+  sudo wget https://download.elastic.co/kibana/kibana/kibana-4.1.1-linux-x64.tar.gz
 
-  # Update apt package database
-  sudo apt-get update
+  # Extract and move it to /opt/
+  sudo tar -zxvf kibana-4.1.1-linux-x64.tar.gz
+  sudo mv kibana-4.1.1-linux-x64 /opt/kibana4
 
-  # Install Kibana
-  sudo apt-get -y install kibana
-
-  # Change Kibana host configuration
+  # Enable PID file for Kibana, this is required to create a systemd init file.
+  sudo sed -i 's/#pid_file/pid_file/g' /opt/kibana4/config/kibana.yml
   sudo sed -i 's/0.0.0.0/$CLUSTER_ENDPOINT/g' /opt/kibana/config/kibana.yml
 
+  # Create systemd file
+  echo "[Unit]" >> /etc/systemd/system/kibana4.service
+  echo "Description=Kibana 4 Web Interface" >> /etc/systemd/system/kibana4.service
+  echo "After=elasticsearch.service" >> /etc/systemd/system/kibana4.service
+  echo "After=logstash.service" >> /etc/systemd/system/kibana4.service
+  echo "[Service]" >> /etc/systemd/system/kibana4.service
+  echo "ExecStartPre=/bin/rm -rf /var/run/kibana.pid" >> /etc/systemd/system/kibana4.service
+  echo "ExecStart=/opt/kibana4/bin/kibana" >> /etc/systemd/system/kibana4.service
+  echo "ExecReload=/bin/kill -9 $(cat /var/run/kibana.pid) && /bin/rm -rf /var/run/kibana.pid && /opt/kibana4/bin/kibana" >> /etc/systemd/system/kibana4.service
+  echo "ExecStop=/bin/kill -9 $(cat /var/run/kibana.pid)" >> /etc/systemd/system/kibana4.service
+  echo "[Install]" >> /etc/systemd/system/kibana4.service
+  echo "WantedBy=multi-user.target" >> /etc/systemd/system/kibana4.service
+
+  # Start and enable kibana to start automatically at system startup
+  sudo systemctl start kibana4.service
+  sudo systemctl enable kibana4.service
+
   # Enable the Kibana service and start it
-  sudo update-rc.d kibana defaults 96 9
-  sudo service kibana start
+  #sudo update-rc.d kibana defaults 96 9
+  #sudo service kibana start
 }
 
 #Loop through options passed

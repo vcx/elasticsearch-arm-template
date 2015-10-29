@@ -5,36 +5,27 @@
     "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "Admin username used when provisioning virtual machines"
+        "description": "Admin username used for provisioning virtual machines"
       }
     },
+
     "adminPassword": {
       "type": "securestring",
       "metadata": {
         "description": "Admin SSH key used when provisioning virtual machines"
       }
     },
-    "dnsNameforLBIP": {
-      "type": "string",
-      "metadata": {
-        "description": "Load balancer subdomain name"
-      }
-    },
-    "storageAccountPrefix": {
+
+    "storageAccountName": {
       "type": "string",
       "metadata": {
         "description": "Unique namespace for the Storage Account where the Virtual Machine's disks will be placed"
       }
     },
-    "versionSuffix": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Optional suffix that will be appended to the storage account and public IP DNS names"
-      }
-    },
+
     "location": {
       "type": "string",
+      "defaultValue": "East US",
       "allowedValues": [
         "West US",
         "East US",
@@ -46,201 +37,49 @@
         "description": "Location where resources will be provisioned"
       }
     },
-    "virtualNetworkName": {
-      "type": "string",
-      "defaultValue": "myVNET",
-      "metadata": {
-        "description": "Virtual Network"
-      }
-    },
-    "OS": {
-      "type": "string",
-      "defaultValue": "ubuntu",
-      "allowedValues": [
-        "ubuntu"
-      ],
-      "metadata": {
-        "description": "The operating system to deploy Elasticsearch cluster on"
-      }
-    },
-    "loadBalancerType": {
-      "type": "string",
-      "defaultValue": "internal",
-      "allowedValues": [
-        "internal",
-        "external"
-      ],
-      "metadata": {
-        "description": "Setup the load balancer internal or external.  If you are setting up Elasticsearch on an external endpoint you will need to secure your nodes with a product like Elasticsearch Shield"
-      }
-    },
-    "jumpbox": {
-      "type": "string",
-      "defaultValue": "Yes",
-      "allowedValues": [
-        "Yes",
-        "No"
-      ],
-      "metadata": {
-        "description": "Optionally add a virtual machine to the deployment which you can use to connect and manage virtual machines on the internal network"
-      }
-    },
-    "vmClientNodeCount": {
-      "type": "int",
-      "defaultValue": 0,
-      "allowedValues": [
-        0,
-        3,
-        5,
-        7
-      ],
-      "metadata": {
-        "description": "Number of Elasticsearch client nodes to provision (Setting this to zero puts the data nodes on the load balancer)"
-      }
-    },
-    "vmMasterNodeCount": {
-      "type": "int",
-      "defaultValue": 0,
-      "allowedValues": [
-        0,
-        3
-      ]
-    },
-    "vmSizeClientNodes": {
-      "type": "string",
-      "defaultValue": "Standard_A1",
-      "metadata": {
-        "description": "Size of the Elasticsearch cluster client nodes"
-      }
-    },
-    "vmSizeMasterNodes": {
-      "type": "string",
-      "defaultValue": "Standard_A0",
-      "metadata": {
-        "description": "Size of the Elasticsearch master nodes"
-      }
-    },
-    "vmSizeDataNodes": {
+
+    "virtualMachineSize": {
       "type": "string",
       "defaultValue": "Standard_D2",
-      "allowedValues": [
-        "Standard_D1",
-        "Standard_D2",
-        "Standard_D3",
-        "Standard_D4",
-        "Standard_A2",
-        "Standard_A3",
-        "Standard_A4",
-        "Standard_A7",
-        "Standard_DS1",
-        "Standard_DS2",
-        "Standard_DS3",
-        "Standard_DS4",
-        "Standard_DS13"
-      ],
       "metadata": {
-        "description": "Size of the Elasticsearch data nodes"
+        "description": "The size of the virtual machine instance"
       }
     },
-    "vmDataNodeCount": {
-      "type": "int",
-      "defaultValue": 3,
-      "metadata": {
-        "description": "Number of Elasticsearch data nodes"
-      }
-    },
-    "dataNodesConfiguration": {
+
+    "elasticsearchClusterDnsName": {
       "type": "string",
-      "defaultValue": "singlebox",
-      "allowedValues": [
-        "singlebox",
-        "data"
-      ]
-    },
-    "esClusterName": {
-      "type": "string",
-      "defaultValue": "elasticsearch",
+      "defaultValue": "telemetry",
       "metadata": {
-        "description": "The name of the Elasticsearch cluster"
-      }
-    },
-    "esVersion": {
-      "type": "string",
-      "defaultValue": "1.7.2",
-      "allowedValues": [
-        "2.0.0-rc1",
-        "1.7.2",
-        "1.6.2",
-        "1.5.2"
-      ],
-      "metadata": {
-        "description": "Elasticsearch version to install"
+        "description": "The DNS prefix that will be used for the public facing IP address"
       }
     }
   },
+
   "variables": {
-    "templateBaseUrl": "https://raw.githubusercontent.com/moorandrew/elasticsearch-arm-template/master/",
-    "masterNodesIpPrefix": "10.0.0.1",
-    "dataNodesIpPrefix": "10.0.1.1",
-    "networkSettings": {
-      "virtualNetworkName": "[parameters('virtualNetworkName')]",
+    "storageAccountName": "esvmstorage",
+    "elasticsearchPublicIpName": "es-public-ip",
+    "virtualNetworkName": "es-vnet",
+    "virtualMachineNicName": "es-vm-nic",
+    "virtualMachineName": "es-vm",
+
+    "virtualNetworkSettings": {
       "addressPrefix": "10.0.0.0/16",
-      "subnet": {
-        "master": {
-          "name": "master",
-          "prefix": "10.0.0.0/24",
-          "vnet": "[parameters('virtualNetworkName')]"
-        },
-        "data": {
-          "name": "data",
-          "prefix": "10.0.1.0/24",
-          "vnet": "[parameters('virtualNetworkName')]"
+      "subnets": {
+        "default": {
+          "name": "default",
+          "prefix": "10.0.0.0/24"
         }
       }
     },
-    "esSettings": {
-      "clusterName": "[parameters('esClusterName')]",
-      "version": "[parameters('esVersion')]",
-      "discoveryHosts": "[concat(variables('masterNodesIpPrefix'), '-3')]",
-      "dataDiscoveryHosts": "[concat(variables('dataNodesIpPrefix'), '-', parameters('vmDataNodeCount'))]"
+
+    "elasticsearchSettings": {
+      "clusterName": "elasticsearch",
+      "clusterVersion": "1.7.2",
+      "clusterDnsName": "[parameters('elasticsearchClusterDnsName')]"
     },
-    "sharedTemplateUrl": "[concat(variables('templateBaseUrl'), 'shared-resources.json')]",
-    "masterTemplates": {
-      "n0": "empty-resources.json",
-      "n3": "[concat(variables('templateBaseUrl'), 'master-nodes-resources.json')]"
-    },
-    "masterTemplateUrl": "[concat(variables('templateBaseUrl'), variables('masterTemplates')[concat('n',parameters('vmMasterNodeCount'))])]",
-    "clientTemplates": {
-      "n0": "empty-resources.json",
-      "n3": "client-nodes-resources.json",
-      "n5": "client-nodes-resources.json",
-      "n7": "client-nodes-resources.json"
-    },
-    "clientTemplateUrl": "[concat(variables('templateBaseUrl'), variables('clientTemplates')[concat('n',parameters('vmClientNodeCount'))])]",
-    "lbBackEndPoolsAdded": {
-      "backendPools": [
-        {
-          "id": "[concat(resourceId('Microsoft.Network/loadBalancers','loadBalancer'),'/backendAddressPools/LBBE')]"
-        }
-      ]
-    },
-    "lbBackendPoolsRemoved": {
-      "backendPools": [ ]
-    },
-    "dataLBSettings0": "[variables('lbBackEndPoolsAdded')]",
-    "dataLBSettings3": "[variables('lbBackendPoolsRemoved')]",
-    "dataLBSettings5": "[variables('lbBackendPoolsRemoved')]",
-    "dataLBSettings7": "[variables('lbBackendPoolsRemoved')]",
-    "dataLBSettings": "[variables(concat('dataLBSettings', parameters('vmClientNodeCount')))]",
-    "jumpboxTemplateYes": "jumpbox-resources.json",
-    "jumpboxTemplateNo": "empty-resources.json",
-    "jumpboxTemplateUrl": "[concat(variables('templateBaseUrl'), variables(concat('jumpboxTemplate',parameters('jumpbox'))))]",
-    "ubuntuScripts": [
-      "[concat(variables('templateBaseUrl'), 'elasticsearch-ubuntu-install.sh')]",
-      "https://raw.githubusercontent.com/moorandrew/elasticsearch-arm-template/master/vm-disk-utils-0.1.sh"
-    ],
-    "dnsNameforLBIPFull": "[concat(parameters('dnsNameforLBIP'), parameters('versionSuffix'))]",
-    "ubuntuSettings": {
+
+    "osSettings": {
+      "computerName": "telemetryvm",
       "imageReference": {
         "publisher": "Canonical",
         "offer": "UbuntuServer",
@@ -248,401 +87,156 @@
         "version": "latest"
       },
       "managementPort": "22",
-      "extentionSettings": {
-        "master": {
-          "publisher": "Microsoft.OSTCExtensions",
-          "type": "CustomScriptForLinux",
-          "typeHandlerVersion": "1.2",
-          "settings": {
-            "fileUris": "[variables('ubuntuScripts')]",
-            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -xn ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').discoveryHosts)]"
-          }
-        },
-        "client": {
-          "publisher": "Microsoft.OSTCExtensions",
-          "type": "CustomScriptForLinux",
-          "typeHandlerVersion": "1.2",
-          "settings": {
-            "fileUris": "[variables('ubuntuScripts')]",
-            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -yn ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').discoveryHosts)]"
-          }
-        },
-        "data": {
-          "publisher": "Microsoft.OSTCExtensions",
-          "type": "CustomScriptForLinux",
-          "typeHandlerVersion": "1.2",
-          "settings": {
-            "fileUris": "[variables('ubuntuScripts')]",
-            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -zn ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').discoveryHosts)]"
-          }
-        },
-        "singlebox": {
-          "publisher": "Microsoft.OSTCExtensions",
-          "type": "CustomScriptForLinux",
-          "typeHandlerVersion": "1.2",
-          "settings": {
-            "fileUris": "[variables('ubuntuScripts')]",
-            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -n ', variables('esSettings').clusterName, ' -v ', variables('esSettings').version, ' -d ', variables('esSettings').dataDiscoveryHosts)]"
-          }
-        },
-        "kibana": {
-          "publisher": "Microsoft.OSTCExtensions",
-          "type": "CustomScriptForLinux",
-          "typeHandlerVersion": "1.2",
-          "settings": {
-            "fileUris": "[variables('ubuntuScripts')]",
-            "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -k ', variables('dnsNameforLBIPFull'))]"
-          }
-        }
-      }
+      "dataDiskCount": 2,
+      "dataDiskSize": 1024
     },
-    "windowsSettings": {
-      "imageReference": {
-        "publisher": "MicrosoftWindowsServer",
-        "offer": "WindowsServer",
-        "sku": "2012-R2-Datacenter",
-        "version": "latest"
-      },
-      "managementPort": "3389",
-      "extentionSettings": {
-        "master": { },
-        "client": { },
-        "data": { }
-      }
-    },
-    "osSettings": "[variables(concat(parameters('OS'), 'Settings'))]",
-    "dataSkuSettings": {
-      "Standard_D1": {
-        "dataDisks": 2,
-        "nodesPerStorageAccount": 6,
-        "storageAccountType": "Standard_LRS"
-      },
-      "Standard_D2": {
-        "dataDisks": 4,
-        "nodesPerStorageAccount": 4,
-        "storageAccountType": "Standard_LRS"
-      },
-      "Standard_D3": {
-        "dataDisks": 8,
-        "nodesPerStorageAccount": 3,
-        "storageAccountType": "Standard_LRS"
-      },
-      "Standard_D4": {
-        "dataDisks": 16,
-        "nodesPerStorageAccount": 2,
-        "storageAccountType": "Standard_LRS"
-      },
-      "Standard_DS1": {
-        "dataDisks": 2,
-        "nodesPerStorageAccount": 6,
-        "storageAccountType": "Premium_LRS"
-      },
-      "Standard_DS2": {
-        "dataDisks": 4,
-        "nodesPerStorageAccount": 4,
-        "storageAccountType": "Premium_LRS"
-      },
-      "Standard_DS3": {
-        "dataDisks": 8,
-        "nodesPerStorageAccount": 4,
-        "storageAccountType": "Premium_LRS"
-      },
-      "Standard_DS4": {
-        "dataDisks": 16,
-        "nodesPerStorageAccount": 2,
-        "storageAccountType": "Premium_LRS"
-      },
-      "Standard_DS13": {
-        "dataDisks": 16,
-        "nodesPerStorageAccount": 2,
-        "storageAccountType": "Premium_LRS"
-      },
-      "Standard_A2": {
-        "dataDisks": 4,
-        "nodesPerStorageAccount": 6,
-        "storageAccountType": "Standard_LRS"
-      },
-      "Standard_A3": {
-        "dataDisks": 8,
-        "nodesPerStorageAccount": 4,
-        "storageAccountType": "Standard_LRS"
-      },
-      "Standard_A4": {
-        "dataDisks": 16,
-        "nodesPerStorageAccount": 2,
-        "storageAccountType": "Standard_LRS"
-      },
-      "Standard_A7": {
-        "dataDisks": 16,
-        "nodesPerStorageAccount": 2,
-        "storageAccountType": "Standard_LRS"
-      }
-    },
-    "nodesPerStorageAccount": "[variables('dataSkuSettings')[parameters('vmSizeDataNodes')].nodesPerStorageAccount]",
-    "storageBinPackMap": [
-      "[div(sub(add(1, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(2, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(3, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(4, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(5, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(6, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(7, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(8, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(9, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(10, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(11, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(12, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(13, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(14, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(15, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(16, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(17, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(18, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(19, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(20, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(21, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(22, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(23, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(24, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(25, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(26, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(27, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(28, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(29, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(30, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(31, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(32, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(33, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(34, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(35, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(36, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(37, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(38, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(39, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(40, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(51, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(52, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(53, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(54, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(55, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(56, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(57, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(58, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(59, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "[div(sub(add(60, variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]"
-    ],
-    "dataNodeStorageSettings": {
-      "count": "[div(sub(add(parameters('vmDataNodeCount'), variables('nodesPerStorageAccount')), 1), variables('nodesPerStorageAccount'))]",
-      "mapping": "[variables('storageBinPackMap')]",
-      "accountType": "[variables('dataSkuSettings')[parameters('vmSizeDataNodes')].storageAccountType]",
-      "prefix": "[variables('storageAccountName')]"
-    },
-    "dataTemplateUrl": "[concat(variables('templateBaseUrl'), 'data-nodes-', string(variables('dataSkuSettings')[parameters('vmSizeDataNodes')].dataDisks), 'disk-resources.json')]",
-    "storageAccountName": "[concat(parameters('storageAccountPrefix'), parameters('versionSuffix'))]"
+
+    "osExtensionSettings": {
+      "templateBaseUrl": "https://raw.githubusercontent.com/moorandrew/elasticsearch-arm-template/master/",
+      "scripts": [
+        "[concat(variables('osExtensionSettings').templateBaseUrl, 'elasticsearch-ubuntu-install.sh')]",
+        "[concat(variables('osExtensionSettings').templateBaseUrl, 'vm-disk-utils-0.1.sh')]"
+      ]
+    }
   },
   "resources": [
     {
-      "name": "master-nodes",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "[concat('Microsoft.Resources/deployments/', 'shared')]"
-      ],
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2015-05-01-preview",
+      "location": "[parameters('location')]",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('masterTemplateUrl')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "storageAccountName": {
-            "value": "[concat(variables('storageAccountName'),'shared')]"
-          },
-          "adminUsername": {
-            "value": "[parameters('adminUsername')]"
-          },
-          "adminPassword": {
-            "value": "[parameters('adminPassword')]"
-          },
-          "masterNodesIpPrefix": {
-            "value": "[variables('masterNodesIpPrefix')]"
-          },
-          "location": {
-            "value": "[parameters('location')]"
-          },
-          "vmSize": {
-            "value": "[parameters('vmSizeMasterNodes')]"
-          },
-          "subnet": {
-            "value": "[variables('networkSettings').subnet.master]"
-          },
-          "osSettings": {
-            "value": "[variables('osSettings')]"
-          }
+        "accountType": "Standard_LRS"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('elasticsearchPublicIpName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('elasticsearchSettings').clusterDnsName]"
         }
       }
     },
     {
-      "name": "shared",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[parameters('location')]",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('sharedTemplateUrl')]",
-          "contentVersion": "1.0.0.0"
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('virtualNetworkSettings').addressPrefix]"
+          ]
         },
-        "parameters": {
-          "location": {
-            "value": "[parameters('location')]"
-          },
-          "networkSettings": {
-            "value": "[variables('networkSettings')]"
-          },
-          "storageAccountName": {
-            "value": "[concat(variables('storageAccountName'),'shared')]"
-          },
-          "loadBalancerType": {
-            "value": "[parameters('loadBalancerType')]"
-          },
-          "ilbIpAddress": {
-            "value": "10.0.0.100"
-          },
-          "dnsName": {
-            "value": "[concat(parameters('dnsNameforLBIP'), parameters('versionSuffix'))]"
+        "subnets": [
+          {
+            "name": "[variables('virtualNetworkSettings').subnets.default.name]",
+            "properties": {
+              "addressPrefix": "[variables('virtualNetworkSettings').subnets.default.prefix]"
+            }
           }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('virtualMachineNicName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName')), '/subnets/', variables('virtualNetworkSettings').subnets.default.name)]"
+              }
+            }
+          }
+        ]
+      }
+    },
+
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('virtualMachineName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('virtualMachineNicName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('virtualMachineSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('osSettings').computerName]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": "[variables('osSettings').imageReference]",
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://', variables('storageAccountName'), '.blob.core.windows.net/vhd/', variables('virtualMachineName'), '-osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "datadisk1",
+              "diskSizeGB": "[variables('osSettings').dataDiskSize]",
+              "lun": 0,
+              "vhd": {
+                "uri": "[concat('http://', variables('storageAccountName'), '.blob.core.windows.net/', 'vhd/', variables('virtualMachineName'), '-dataDisk1.vhd')]"
+              },
+              "caching": "None",
+              "createOption": "Empty"
+            },
+            {
+              "name": "datadisk2",
+              "diskSizeGB": "[variables('osSettings').dataDiskSize]",
+              "lun": 1,
+              "vhd": {
+                "uri": "[concat('http://', variables('storageAccountName'), '.blob.core.windows.net/', 'vhd/', variables('virtualMachineName'), '-dataDisk2.vhd')]"
+              },
+              "caching": "None",
+              "createOption": "Empty"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('virtualMachineNicName'))]"
+            }
+          ]
         }
       }
     },
     {
-      "name": "client-nodes",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('virtualMachineName'), '/installelasticsearch')]",
+      "apiVersion": "2015-05-01-preview",
+      "location": "[parameters('location')]",
       "dependsOn": [
-        "[concat('Microsoft.Resources/deployments/', 'shared')]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('virtualMachineName'))]"
       ],
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('clientTemplateUrl')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "adminUsername": {
-            "value": "[parameters('adminUsername')]"
-          },
-          "adminPassword": {
-            "value": "[parameters('adminPassword')]"
-          },
-          "storageAccountName": {
-            "value": "[concat(variables('storageAccountName'),'shared')]"
-          },
-          "location": {
-            "value": "[parameters('location')]"
-          },
-          "subnet": {
-            "value": "[variables('networkSettings').subnet.data]"
-          },
-          "vmSize": {
-            "value": "[parameters('vmSizeClientNodes')]"
-          },
-          "osSettings": {
-            "value": "[variables('osSettings')]"
-          },
-          "vmCount": {
-            "value": "[parameters('vmClientNodeCount')]"
-          },
-          "lbBackendPools": {
-            "value": "[variables('lbBackEndPoolsAdded')]"
-          }
-        }
-      }
-    },
-    {
-      "name": "data-nodes",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "[concat('Microsoft.Resources/deployments/', 'shared')]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('dataTemplateUrl')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "adminUsername": {
-            "value": "[parameters('adminUsername')]"
-          },
-          "adminPassword": {
-            "value": "[parameters('adminPassword')]"
-          },
-          "location": {
-            "value": "[parameters('location')]"
-          },
-          "storageSettings": {
-            "value": "[variables('dataNodeStorageSettings')]"
-          },
-          "subnet": {
-            "value": "[variables('networkSettings').subnet.data]"
-          },
-          "dataNodesIpPrefix": {
-            "value": "[variables('dataNodesIpPrefix')]"
-          },
-          "vmSize": {
-            "value": "[parameters('vmSizeDataNodes')]"
-          },
-          "vmCount": {
-            "value": "[parameters('vmDataNodeCount')]"
-          },
-          "namespace": {
-            "value": "esdata"
-          },
-          "osSettings": {
-            "value": "[variables('osSettings')]"
-          },
-          "lbBackendPools": {
-            "value": "[variables('dataLBSettings')]"
-          },
-          "extensionSettingsPath": {
-            "value": "[parameters('dataNodesConfiguration')]"
-          }
-        }
-      }
-    },
-    {
-      "name": "jumpbox",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "[concat('Microsoft.Resources/deployments/', 'shared')]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[variables('jumpboxTemplateUrl')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "storageAccountName": {
-            "value": "[concat(variables('storageAccountName'),'shared')]"
-          },
-          "adminUsername": {
-            "value": "[parameters('adminUsername')]"
-          },
-          "adminPassword": {
-            "value": "[parameters('adminPassword')]"
-          },
-          "location": {
-            "value": "[parameters('location')]"
-          },
-          "subnet": {
-            "value": "[variables('networkSettings').subnet.data]"
-          },
-          "osSettings": {
-            "value": "[variables('osSettings')]"
-          }
+        "publisher": "Microsoft.OSTCExtensions",
+        "type": "CustomScriptForLinux",
+        "typeHandlerVersion": "1.2",
+        "settings": {
+          "fileUris": "[variables('osExtensionSettings').scripts]",
+          "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -n ', variables('elasticsearchSettings').clusterName, ' -v ', variables('elasticsearchSettings').clusterVersion, ' -d ', '127.0.0.1')]"
         }
       }
     }

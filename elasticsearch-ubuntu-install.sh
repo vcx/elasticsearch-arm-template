@@ -29,12 +29,10 @@ help()
     echo "This script installs Elasticsearch cluster on Ubuntu"
     echo "Parameters:"
     echo "-n elasticsearch cluster name"
-    echo "-d static discovery endpoints 10.0.0.1-3"
-    echo "-v elasticsearch version 1.5.0"
+    echo "-d static discovery endpoints"
+    echo "-v elasticsearch version 1.7.1"
     echo "-l install marvel yes/no"
-    echo "-x configure as a dedicated master node"
-    echo "-y configure as client only node (no master, no data)"
-    echo "-z configure as data node (no master)"
+    echo "-k install kibana yes/no"
     echo "-h view this help content"
 }
 
@@ -75,10 +73,9 @@ CLUSTER_NAME="elasticsearch"
 ES_VERSION="1.7.2"
 KIBANA_VERSION = "4.1"
 DISCOVERY_ENDPOINTS=""
-INSTALL_MARVEL="yes" #We use this because of ARM template limitation
-CLIENT_ONLY_NODE=0
-DATA_NODE=0
-MASTER_ONLY_NODE=0
+INSTALL_MARVEL="yes"
+INSTALL_KIBANA="yes"
+
 CLUSTER_ENDPOINT="localhost"
 
 install_kibana()
@@ -106,7 +103,7 @@ install_kibana()
 }
 
 #Loop through options passed
-while getopts :n:d:v:l:k:xyzsh optname; do
+while getopts :n:v:l:k:sh optname; do
     log "Option $optname set with value ${OPTARG}"
   case $optname in
     n) #set cluster name
@@ -122,24 +119,10 @@ while getopts :n:d:v:l:k:xyzsh optname; do
       INSTALL_MARVEL=${OPTARG}
       ;;
     k) #install kibana
-      CLUSTER_ENDPOINT=${OPTARG}
-      install_kibana
-      exit 0
-      ;;
-    x) #master node
-      MASTER_ONLY_NODE=1
-      ;;
-    y) #client node
-      CLIENT_ONLY_NODE=1
-      ;;
-    z) #data node
-      DATA_NODE=1
+      INSTALL_KIBANA=${OPTARG}
       ;;
     s) #use OS striped disk volumes
       OS_STRIPED_DISK=1
-      ;;
-    d) #place data on local resource disk
-      NON_DURABLE=1
       ;;
     h) #show help
       help
@@ -156,25 +139,6 @@ done
 # Base path for data disk mount points
 # The script assume format /datadisks/disk1 /datadisks/disk2
 DATA_BASE="/datadisks"
-
-# Expand a list of successive ip range and filter my local local ip from the list
-# Ip list is represented as a prefix and that is appended with a zero to N index
-# 10.0.0.1-3 would be converted to "10.0.0.10 10.0.0.11 10.0.0.12"
-expand_ip_range() {
-    IFS='-' read -a HOST_IPS <<< "$1"
-
-    #Get the IP Addresses on this machine
-    declare -a MY_IPS=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`
-    declare -a EXPAND_STATICIP_RANGE_RESULTS=()
-    for (( n=0 ; n<("${HOST_IPS[1]}"+0) ; n++))
-    do
-        HOST="${HOST_IPS[0]}${n}"
-        if ! [[ "${MY_IPS[@]}" =~ "${HOST}" ]]; then
-            EXPAND_STATICIP_RANGE_RESULTS+=($HOST)
-        fi
-    done
-    echo "${EXPAND_STATICIP_RANGE_RESULTS[@]}"
-}
 
 # Configure Elasticsearch Data Disk Folder and Permissions
 setup_data_disk()
@@ -253,10 +217,7 @@ else
     log "Configured data directory does not exist for ${HOSTNAME} using defaults"
 fi
 
-#expand_staticip_range "$IP_RANGE"
-
-S=$(expand_ip_range "$DISCOVERY_ENDPOINTS")
-HOSTS_CONFIG="[\"${S// /\",\"}\"]"
+HOSTS_CONFIG="[\"${DISCOVERY_ENDPOINTS// /\",\"}\"]"
 
 #Format the static discovery host endpoints for Elasticsearch configuration ["",""] format
 #HOSTS_CONFIG="[\"${DISCOVERY_ENDPOINTS//-/\",\"}\"]"
@@ -283,25 +244,10 @@ echo "discovery.zen.ping.unicast.hosts: $HOSTS_CONFIG" >> /etc/elasticsearch/ela
 
 
 # Configure Elasticsearch node type
-log "Configure master/client/data node type flags mater-$MASTER_ONLY_NODE data-$DATA_NODE"
-
-if [ ${MASTER_ONLY_NODE} -ne 0 ]; then
-    log "Configure node as master only"
-    echo "node.master: true" >> /etc/elasticsearch/elasticsearch.yml
-    echo "node.data: false" >> /etc/elasticsearch/elasticsearch.yml
-elif [ ${DATA_NODE} -ne 0 ]; then
-    log "Configure node as data only"
-    echo "node.master: false" >> /etc/elasticsearch/elasticsearch.yml
-    echo "node.data: true" >> /etc/elasticsearch/elasticsearch.yml
-elif [ ${CLIENT_ONLY_NODE} -ne 0 ]; then
-    log "Configure node as data only"
-    echo "node.master: false" >> /etc/elasticsearch/elasticsearch.yml
-    echo "node.data: false" >> /etc/elasticsearch/elasticsearch.yml
-else
-    log "Configure node for master and data"
-    echo "node.master: true" >> /etc/elasticsearch/elasticsearch.yml
-    echo "node.data: true" >> /etc/elasticsearch/elasticsearch.yml
-fi
+log "Configure master/client/data node type flags "
+log "Configure node for master and data"
+echo "node.master: true" >> /etc/elasticsearch/elasticsearch.yml
+echo "node.data: true" >> /etc/elasticsearch/elasticsearch.yml
 
 # DNS Retry
 echo "options timeout:1 attempts:5" >> /etc/resolvconf/resolv.conf.d/head
@@ -328,6 +274,12 @@ if [ "${INSTALL_MARVEL}" == "yes" ];
     then
     log "Installing Marvel Plugin"
     /usr/share/elasticsearch/bin/plugin -i elasticsearch/marvel/latest
+fi
+
+#Optionally Install Kibana
+if ["${INSTALL_KIBANA}" == "yes"];
+  then
+    log "Installing Kibana"
 fi
 
 #Install Monit

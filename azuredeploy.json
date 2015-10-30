@@ -2,6 +2,14 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "version": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "desciprtion": "The string suffix representing deployment version. Used for the dns-based resources to avoid conflicts."
+      }
+    },
+
     "adminUsername": {
       "type": "string",
       "metadata": {
@@ -13,13 +21,6 @@
       "type": "securestring",
       "metadata": {
         "description": "Admin SSH key used when provisioning virtual machines"
-      }
-    },
-
-    "storageAccountName": {
-      "type": "string",
-      "metadata": {
-        "description": "Unique namespace for the Storage Account where the Virtual Machine's disks will be placed"
       }
     },
 
@@ -56,11 +57,13 @@
   },
 
   "variables": {
-    "storageAccountName": "esvmstorage",
-    "elasticsearchPublicIpName": "es-public-ip",
-    "virtualNetworkName": "es-vnet",
-    "virtualMachineNicName": "es-vm-nic",
-    "virtualMachineName": "es-vm",
+    "storageAccountName": "[concat('esvmstorage', parameters('version'))]",
+    "elasticsearchPublicIpName": "[concat('es-public-ip', '-', parameters('version'))]",
+    "virtualNetworkName": "[concat('es-vnet', '-', parameters('version'))]",
+    "virtualMachineNicName": "[concat('es-vm-nic', '-', parameters('version'))]",
+    "virtualMachineName": "[concat('es-vm', '-', parameters('version'))]",
+
+    "templateBaseUrl": "https://raw.githubusercontent.com/moorandrew/elasticsearch-arm-template/master/",
 
     "virtualNetworkSettings": {
       "addressPrefix": "10.0.0.0/16",
@@ -75,7 +78,7 @@
     "elasticsearchSettings": {
       "clusterName": "elasticsearch",
       "clusterVersion": "1.7.2",
-      "clusterDnsName": "[parameters('elasticsearchClusterDnsName')]"
+      "clusterDnsName": "[concat(parameters('elasticsearchClusterDnsName'), parameters('version'))]"
     },
 
     "osSettings": {
@@ -88,14 +91,13 @@
       },
       "managementPort": "22",
       "dataDiskCount": 2,
-      "dataDiskSize": 1024
+      "dataDiskSize": 1023
     },
 
     "osExtensionSettings": {
-      "templateBaseUrl": "https://raw.githubusercontent.com/moorandrew/elasticsearch-arm-template/master/",
       "scripts": [
-        "[concat(variables('osExtensionSettings').templateBaseUrl, 'elasticsearch-ubuntu-install.sh')]",
-        "[concat(variables('osExtensionSettings').templateBaseUrl, 'vm-disk-utils-0.1.sh')]"
+        "[concat(variables('templateBaseUrl'), 'elasticsearch-ubuntu-install.sh')]",
+        "[concat(variables('templateBaseUrl'), 'vm-disk-utils-0.1.sh')]"
       ]
     }
   },
@@ -147,12 +149,18 @@
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('virtualMachineNicName')]",
       "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('elasticsearchPublicIpName'))]"
+      ],
       "properties": {
         "ipConfigurations": [
           {
             "name": "ipconfig",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('elasticsearchPublicIpName'))]"
+              },
               "subnet": {
                 "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName')), '/subnets/', variables('virtualNetworkSettings').subnets.default.name)]"
               }
@@ -161,7 +169,6 @@
         ]
       }
     },
-
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines",

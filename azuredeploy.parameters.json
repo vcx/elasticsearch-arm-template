@@ -1,0 +1,21 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "value": "amoor"
+    },
+    "adminPassword": {
+      "value": "WSXzaq123"
+    },
+    "location": {
+      "value": "East US"
+    },
+    "virtualMachineSize": {
+      "value": "Standard_D2"
+    },
+    "elasticsearchClusterDnsName": {
+      "value": "es"
+    }
+  }
+}

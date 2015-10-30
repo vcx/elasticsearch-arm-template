@@ -103,7 +103,7 @@ install_kibana()
 }
 
 #Loop through options passed
-while getopts :n:v:l:k:sh optname; do
+while getopts :n:d:v:l:k:sh optname; do
     log "Option $optname set with value ${OPTARG}"
   case $optname in
     n) #set cluster name

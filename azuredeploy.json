@@ -179,6 +179,20 @@
               "priority": 200,
               "direction": "Inbound"
             }
+          },
+          {
+            "name": "Elasticsearch",
+            "properties": {
+              "description": "Allows Elasticsearch connection",
+              "protocol": "Tcp",
+              "sourcePortRange": "9200",
+              "destinationPortRange": "9200",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 300,
+              "direction": "Inbound"
+            }
           }
         ]
       }

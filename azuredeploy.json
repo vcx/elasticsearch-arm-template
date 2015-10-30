@@ -171,7 +171,7 @@
             "properties": {
               "description": "Allows Kibana connection",
               "protocol": "Tcp",
-              "sourcePortRange": "80",
+              "sourcePortRange": "5601",
               "destinationPortRange": "5601",
               "sourceAddressPrefix": "*",
               "destinationAddressPrefix": "*",
@@ -300,5 +300,19 @@
         }
       }
     }
-  ]
+  ],
+  "outputs": {
+    "kibana-url": {
+      "type": "string",
+      "value": "[concat(reference(variables('elasticsearchPublicIpName')).dnsSettings.fqdn, ':', '5601')]"
+    },
+    "elasticsearch-url": {
+      "type": "string",
+      "value": "[concat(reference(variables('elasticsearchPublicIpName')).dnsSettings.fqdn, ':', '9200')]"
+    },
+    "marvel-url": {
+      "type": "string",
+      "value": "[concat(reference(variables('elasticsearchPublicIpName')).dnsSettings.fqdn, ':', '9200', '/_plugin/marvel')]"
+    }
+  }
 }

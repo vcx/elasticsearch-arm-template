@@ -62,6 +62,7 @@
     "virtualNetworkName": "[concat('es-vnet', '-', parameters('version'))]",
     "virtualMachineNicName": "[concat('es-vm-nic', '-', parameters('version'))]",
     "virtualMachineName": "[concat('es-vm', '-', parameters('version'))]",
+    "networkSecurityGroupName": "[concat('es-nsg', '-', parameters('version'))]",
 
     "templateBaseUrl": "https://raw.githubusercontent.com/moorandrew/elasticsearch-arm-template/master/",
 
@@ -139,6 +140,44 @@
             "name": "[variables('virtualNetworkSettings').subnets.default.name]",
             "properties": {
               "addressPrefix": "[variables('virtualNetworkSettings').subnets.default.prefix]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('networkSecurityGroupName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "description": "Allows SSH traffic",
+              "protocol": "Tcp",
+              "sourcePortRange": "22",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "Kibana",
+            "properties": {
+              "description": "Allows Kibana connection",
+              "protocol": "Tcp",
+              "sourcePortRange": "80",
+              "destinationPortRange": "5601",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
             }
           }
         ]

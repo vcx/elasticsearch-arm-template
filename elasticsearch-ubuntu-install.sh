@@ -293,9 +293,6 @@ if ["${INSTALL_KIBANA}" == "yes"];
     # Install Kibana
     sudo apt-get -y --force-yes install kibana
   
-    # Change Kibana host configuration
-    sudo sed -i "s/0.0.0.0/localhost/g" /opt/kibana/config/kibana.yml
-  
     # Enable the Kibana service and start it
     sudo update-rc.d kibana defaults 96 9
     sudo service kibana start

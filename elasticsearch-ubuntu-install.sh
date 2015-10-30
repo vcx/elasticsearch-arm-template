@@ -30,7 +30,7 @@ help()
     echo "Parameters:"
     echo "-n elasticsearch cluster name"
     echo "-d static discovery endpoints"
-    echo "-v elasticsearch version 1.7.1"
+    echo "-v elasticsearch version 1.7.2"
     echo "-l install marvel yes/no"
     echo "-k install kibana yes/no"
     echo "-h view this help content"
@@ -75,32 +75,6 @@ KIBANA_VERSION = "4.1"
 DISCOVERY_ENDPOINTS=""
 INSTALL_MARVEL="yes"
 INSTALL_KIBANA="yes"
-
-CLUSTER_ENDPOINT="localhost"
-
-install_kibana()
-{
-  log "Installing Kibana Version - $KIBANA_VERSION"
-
-  # Import the Elasticsearch public GPG key into apt
-  sudo wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
-
-  # Create the Kibana source list
-  echo "deb http://packages.elastic.co/kibana/4.1/debian stable main" | sudo tee /etc/apt/sources.list.d/kibana.list
-
-  # Update apt package database
-  sudo apt-get update
-
-  # Install Kibana
-  sudo apt-get -y --force-yes install kibana
-
-  # Change Kibana host configuration
-  sudo sed -i "s/0.0.0.0/$CLUSTER_ENDPOINT/g" /opt/kibana/config/kibana.yml
-
-  # Enable the Kibana service and start it
-  sudo update-rc.d kibana defaults 96 9
-  sudo service kibana start
-}
 
 #Loop through options passed
 while getopts :n:d:v:l:k:sh optname; do
@@ -277,7 +251,7 @@ if [ "${INSTALL_MARVEL}" == "yes" ];
 fi
 
 #Optionally Install Kibana
-if ["${INSTALL_KIBANA}" == "yes"];
+if [ "${INSTALL_KIBANA}" == "yes" ];
   then
     log "Installing Kibana Version - $KIBANA_VERSION"
 

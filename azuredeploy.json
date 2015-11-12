@@ -13,14 +13,14 @@
     "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "Admin username used for provisioning virtual machines"
+        "description": "Admin username used for provisioned virtual machines"
       }
     },
 
     "adminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "Admin SSH key used when provisioning virtual machines"
+        "description": "Admin SSH key used when provisioned virtual machines"
       }
     },
 
@@ -32,7 +32,8 @@
         "East US",
         "East Asia",
         "Southeast Asia",
-        "West Europe"
+        "West Europe",
+        "East US 2"
       ],
       "metadata": {
         "description": "Location where resources will be provisioned"
